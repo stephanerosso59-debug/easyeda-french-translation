@@ -124,6 +124,30 @@ if (/\.language_fr_\w+\{background-position/.test(out)) {
   } else mods.push('flag-css: WARN anchor not found (see CODE-MODS.md)');
 }
 
+// 3) THE KEY FIX: force LOCAL locale loading. Without this, EasyEDA fetches the
+//    (partial) French from its server and ignores the local translations we just
+//    inserted -> only a few strings show as French. This makes it use the local
+//    cache. Regex-captures the minified names so it works across versions.
+const cacheRe = /(\w+)\._cache\[(\w+)\]&&\1\.update\(\2\)/;
+if (cacheRe.test(out)) {
+  out = out.replace(cacheRe, (mm, X, Y) =>
+    X + '._cache[' + Y + ']?' + X + '._cache[' + Y + ']._status="loaded":' + X + '._cache[' + Y + ']={_status:"loaded"},' + X + '.update(' + Y + ')');
+  mods.push('local-loading: ADDED');
+} else mods.push('local-loading: already present / anchor not found');
+
+// 4) Show "FR" in the top-right language badge (cosmetic).
+if (out.includes('children:"FR"}')) {
+  mods.push('fr-badge: already present');
+} else {
+  const bq = String.fromCharCode(96);
+  const m3 = out.match(new RegExp('(\\w+)\\.lang==="en"\\?\\(0,(\\w+)\\.jsx\\)\\("div",\\{className:' + bq + '\\$\\{(\\w+)\\["language-en-text"\\]\\} ' + bq + ',children:"EN"\\}\\):'));
+  if (m3) {
+    const frBranch = m3[1] + '.lang==="fr"?(0,' + m3[2] + '.jsx)("div",{className:' + bq + '${' + m3[3] + '["language-en-text"]} ' + bq + ',children:"FR"}):';
+    out = out.replace(m3[0], m3[0] + frBranch);
+    mods.push('fr-badge: ADDED');
+  } else mods.push('fr-badge: anchor not found');
+}
+
 // verify
 const nonAsciiAfter = (out.match(/[^\x00-\x7F]/g) || []).length;
 const topAfter = (out.match(/,"@@topMenu"/g) || []).length;
