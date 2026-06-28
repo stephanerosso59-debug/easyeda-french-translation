@@ -30,25 +30,32 @@ script that injects them into your own copy of EasyEDA's `ui.js`.
 
 ## 🇫🇷 Installation (Français)
 
+> **Prérequis : Node.js** (gratuit). S'il n'est pas installé, prends-le sur **https://nodejs.org**
+> (bouton **LTS**), installe-le, puis **rouvre** PowerShell.
+
 1. **Télécharge** ce projet (bouton vert **Code → Download ZIP**) puis **dézippe-le**.
 2. Ouvre **PowerShell en Administrateur** (clic droit sur *Windows PowerShell* → **Exécuter en tant qu'administrateur**).
 3. Place-toi dans le dossier dézippé, par exemple :
    ```powershell
    cd "C:\Users\TonNom\Downloads\easyeda-french-translation"
    ```
-4. Lance ces **3 lignes** (copier-coller) :
+4. Lance **une seule commande** :
    ```powershell
-   Set-ExecutionPolicy Bypass -Scope Process -Force
-   Get-ChildItem . -Recurse | Unblock-File
-   .\install.ps1
+   node install.mjs
    ```
+   *(ou, si tu préfères passer par le script PowerShell — il lance simplement `node install.mjs` :*
+   ```powershell
+   Set-ExecutionPolicy Bypass -Scope Process -Force ; Get-ChildItem . -Recurse | Unblock-File ; .\install.ps1
+   ```
+   *)*
 5. **Ferme et rouvre EasyEDA Pro**, puis choisis **Français** dans le menu de langue (en haut à droite). 🎉
 
-`install.ps1` fait tout : il **détecte** ton install EasyEDA, **sauvegarde** `ui.js`, insère les
-**3 870** traductions, enregistre la **langue + le drapeau** FR, et copie les fichiers de locale.
+`install.mjs` traduit **tout** : `ui.js` (éditeur, **3 870** chaînes), `app.js` (écran de démarrage /
+espace de travail / paramètres), `smt-ui.js` (module SMT/DFM), enregistre la **langue + le drapeau**
+FR et copie les locales. Une sauvegarde `*.en.bak` est créée pour chaque fichier modifié.
 
-- **Revenir à l'anglais :** `.\install.ps1 -Uninstall`
-- **EasyEDA installé ailleurs :** `.\install.ps1 -EasyEdaDir "D:\...\easyeda-pro"`
+- **Revenir à l'anglais :** `node install.mjs --uninstall`
+- **EasyEDA installé ailleurs :** `node install.mjs "D:\...\easyeda-pro"`
 
 ### ⚠️ En cas d'erreur (texte en rouge)
 
@@ -67,25 +74,22 @@ script that injects them into your own copy of EasyEDA's `ui.js`.
 
 In an **Administrator** PowerShell, inside the unzipped folder, run:
 ```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
-Get-ChildItem . -Recurse | Unblock-File
-.\install.ps1
+node install.mjs
 ```
 Then restart EasyEDA Pro and pick **Français** (language menu, top-right).
-Revert: `.\install.ps1 -Uninstall`. Custom path: `-EasyEdaDir "D:\...\easyeda-pro"`.
-*(Advanced: `node apply-french.mjs "<path-to-ui.js>"`.)*
+Revert: `node install.mjs --uninstall`. Custom path: `node install.mjs "D:\...\easyeda-pro"`.
+*(Requires **Node.js** — https://nodejs.org. `.\install.ps1` is just a wrapper that runs the same command.)*
 
 > **Common error:** *"... cannot be loaded because running scripts is disabled on this
 > system"* → that's the PowerShell execution policy. The `Set-ExecutionPolicy Bypass -Scope
 > Process -Force` line (run it first, in the same window) fixes it.
 
-## Also included
+## Also included (all auto-applied by `install.mjs`)
 
-- **`app.js` strings** (`app-fr.json`, 132 pairs) — the Electron shell shown at launch
-  (workspace picker, online/offline mode, cache & storage settings). Applying these is a
-  more invasive edit to `app.js` (a `f5` French table + routing the lookup through it);
-  it is **documented in `CODE-MODS.md`** rather than auto-applied, because it depends on
-  minified identifiers that change between versions.
+- **`app.js`** (`app/app-fr.json`, 132 strings) — the Electron shell shown at launch
+  (workspace picker, online/offline mode, cache & storage settings).
+- **`smt-ui.js`** (`smt/smt-fr.json`, 337 strings) — the SMT / DFM / assembly module.
+- **`locale/fr.json` + `app-menu-fr.json`** — system locale strings.
 - **Interactive BOM → French** (`translate_bom.ps1`) — when EasyEDA exports an Interactive
   BOM as HTML, run:
   ```powershell
