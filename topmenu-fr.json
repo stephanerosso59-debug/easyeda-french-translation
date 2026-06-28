@@ -1,0 +1,19 @@
+{
+  "Advanced": "Avancé",
+  "Tools": "Outils",
+  "Settings": "Paramètres",
+  "Tools{num}": "Outils{num}",
+  "Settings{num}": "Paramètres{num}",
+  "File{num}": "Fichiers{num}",
+  "Edit{num}": "Éditer{num}",
+  "View{num}": "Vues{num}",
+  "Place{num}": "Placer{num}",
+  "Design{num}": "Conception{num}",
+  "Route{num}": "Routage{num}",
+  "Layout{num}": "Disposition{num}",
+  "Export{num}": "Exporter{num}",
+  "Help{num}": "Aide{num}",
+  "Other{num}": "Autres{num}",
+  "Order": "Commander",
+  "All": "Tout"
+}

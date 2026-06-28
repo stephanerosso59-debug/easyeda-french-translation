@@ -22,6 +22,8 @@ if (!target) {
 }
 
 const glossary = JSON.parse(fs.readFileSync(path.join(__dir, 'ui-fr.json'), 'utf8'));
+let menuGlossary = {};
+try { menuGlossary = JSON.parse(fs.readFileSync(path.join(__dir, 'topmenu-fr.json'), 'utf8')); } catch (e) {}
 
 // Encode a decoded string back into a ui.js JSON string body (pure ASCII).
 function enc(str) {
@@ -29,8 +31,12 @@ function enc(str) {
   for (const ch of str) {
     if (ch === '\\') { r += '\\\\'; continue; }
     if (ch === '"') { r += '\\"'; continue; }
+    if (ch === '\n') { r += '\\n'; continue; }
+    if (ch === '\r') { r += '\\r'; continue; }
+    if (ch === '\t') { r += '\\t'; continue; }
     const cp = ch.codePointAt(0);
-    r += cp < 0x80 ? ch : '\\u' + cp.toString(16).toUpperCase().padStart(4, '0');
+    if (cp < 0x20 || cp >= 0x80) { r += '\\u' + cp.toString(16).toUpperCase().padStart(4, '0'); continue; }
+    r += ch;
   }
   return r;
 }
@@ -57,6 +63,38 @@ for (const [key, val] of Object.entries(glossary)) {
 }
 
 let out = s.slice(0, idx) + insertion + s.slice(idx);
+
+// --- Translate the top menu (the @@topMenu nested object) ---------------------
+// Override its values with French (last value wins in a JS object literal). This
+// covers the top menu bar (File/Edit/View/Place...) which lives in @@topMenu, not
+// in the depth-1 pairs. Works on any version (English keys are stable).
+let menuAdded = 0;
+{
+  const mk = '"@@topMenu":';
+  const mi = out.indexOf(mk);
+  if (mi >= 0) {
+    const tStart = mi + mk.length; // at '{'
+    let j = tStart, d = 0, mEnd = -1, inStr = false;
+    for (; j < out.length; j++) {
+      const c = out[j];
+      if (inStr) { if (c === '\\') { j++; continue; } if (c === '"') inStr = false; continue; }
+      if (c === '"') inStr = true;
+      else if (c === '{') d++;
+      else if (c === '}') { d--; if (d === 0) { mEnd = j; break; } }
+    }
+    if (mEnd >= 0) {
+      const region = out.slice(tStart, mEnd);
+      let mins = '';
+      for (const [k, v] of Object.entries(menuGlossary)) {
+        const pair = '"' + enc(k) + '":"' + enc(v) + '"';
+        if (region.includes(pair)) continue; // idempotent
+        mins += ',' + pair;
+        menuAdded++;
+      }
+      out = out.slice(0, mEnd) + mins + out.slice(mEnd);
+    }
+  }
+}
 
 // --- Code modifications that make French selectable in the UI -----------------
 // These target EasyEDA Pro's minified ui.js. They are idempotent (skip if already
@@ -95,7 +133,7 @@ if (!process.argv.includes('--dry-run')) {
   fs.writeFileSync(target, out, 'utf8');
 }
 
-console.log('translations added:', added, '| skipped (already present):', skipped);
+console.log('translations added:', added, '| skipped (already present):', skipped, '| top-menu:', menuAdded);
 mods.forEach((m) => console.log('  code-mod', m));
 console.log('@@topMenu:', topBefore, '->', topAfter, topAfter === topBefore ? 'OK' : 'CHANGED!');
 console.log('non-ASCII:', nonAsciiBefore, '->', nonAsciiAfter, nonAsciiAfter === nonAsciiBefore ? 'OK (pure ASCII added)' : 'CHANGED!');
