@@ -28,25 +28,56 @@ script that injects them into your own copy of EasyEDA's `ui.js`.
 | `CODE-MODS.md` | The code edits that make French selectable (`ui.js` #1–2 automated; `ui.js` #3–4 and the `app.js` integration documented) |
 | `MEMO_EASYEDA_FR.md` | Full translation procedure / project notes |
 
-## Installation — 3 steps
+## 🇫🇷 Installation (Français)
 
-1. **Download & unzip** this project (green **Code** button → *Download ZIP*, then extract).
-2. Open **PowerShell as Administrator** (right-click PowerShell → *Run as administrator*),
-   `cd` into the unzipped folder, and run **one command**:
+1. **Télécharge** ce projet (bouton vert **Code → Download ZIP**) puis **dézippe-le**.
+2. Ouvre **PowerShell en Administrateur** (clic droit sur *Windows PowerShell* → **Exécuter en tant qu'administrateur**).
+3. Place-toi dans le dossier dézippé, par exemple :
    ```powershell
-   Set-ExecutionPolicy Bypass -Scope Process -Force ; .\install.ps1
+   cd "C:\Users\TonNom\Downloads\easyeda-french-translation"
    ```
-3. **Restart EasyEDA Pro** → pick **Français** in the language menu (top-right). Done. 🎉
+4. Lance ces **3 lignes** (copier-coller) :
+   ```powershell
+   Set-ExecutionPolicy Bypass -Scope Process -Force
+   Get-ChildItem . -Recurse | Unblock-File
+   .\install.ps1
+   ```
+5. **Ferme et rouvre EasyEDA Pro**, puis choisis **Français** dans le menu de langue (en haut à droite). 🎉
 
-`install.ps1` does everything for you: it **auto-detects** your EasyEDA install (no version
-folder to find), backs up `ui.js`, inserts the **3 870** translations, registers the French
-language + flag, and copies the locale files.
+`install.ps1` fait tout : il **détecte** ton install EasyEDA, **sauvegarde** `ui.js`, insère les
+**3 870** traductions, enregistre la **langue + le drapeau** FR, et copie les fichiers de locale.
 
-- **Back to English:** `.\install.ps1 -Uninstall`
-- **EasyEDA installed elsewhere:** `.\install.ps1 -EasyEdaDir "D:\...\easyeda-pro"`
+- **Revenir à l'anglais :** `.\install.ps1 -Uninstall`
+- **EasyEDA installé ailleurs :** `.\install.ps1 -EasyEdaDir "D:\...\easyeda-pro"`
 
-> Requirements: Windows + EasyEDA Pro. PowerShell is built into Windows — **nothing else to
-> install**. (Advanced users can instead run `node apply-french.mjs "<path-to-ui.js>"`.)
+### ⚠️ En cas d'erreur (texte en rouge)
+
+| Message d'erreur | Cause | Solution |
+|---|---|---|
+| **« impossible de charger le fichier … l'exécution de scripts est désactivée »** | la sécurité PowerShell bloque les `.ps1` | exécute la ligne `Set-ExecutionPolicy Bypass -Scope Process -Force` (étape 4) **avant** `.\install.ps1` |
+| **« … n'est pas signé numériquement »** ou fichier *bloqué* | fichiers issus d'un ZIP téléchargé | exécute `Get-ChildItem . -Recurse \| Unblock-File` (étape 4) |
+| **« Accès refusé » / « Access is denied »** (sur `Program Files`) | PowerShell **pas** en admin | relance PowerShell en **Administrateur** |
+| **« Lance ce script … EN ADMINISTRATEUR »** | idem | idem |
+| **« EasyEDA Pro introuvable »** | installé hors `C:\Program Files\easyeda-pro` | `.\install.ps1 -EasyEdaDir "<ton chemin>\easyeda-pro"` |
+| **« Marqueur de traduction introuvable »** | version de `ui.js` non compatible | signale-le (avec ta version d'EasyEDA) |
+
+> Prérequis : **Windows + EasyEDA Pro**. PowerShell est **intégré à Windows**, rien d'autre à installer.
+
+## 🇬🇧 Installation (English)
+
+In an **Administrator** PowerShell, inside the unzipped folder, run:
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+Get-ChildItem . -Recurse | Unblock-File
+.\install.ps1
+```
+Then restart EasyEDA Pro and pick **Français** (language menu, top-right).
+Revert: `.\install.ps1 -Uninstall`. Custom path: `-EasyEdaDir "D:\...\easyeda-pro"`.
+*(Advanced: `node apply-french.mjs "<path-to-ui.js>"`.)*
+
+> **Common error:** *"... cannot be loaded because running scripts is disabled on this
+> system"* → that's the PowerShell execution policy. The `Set-ExecutionPolicy Bypass -Scope
+> Process -Force` line (run it first, in the same window) fixes it.
 
 ## Also included
 

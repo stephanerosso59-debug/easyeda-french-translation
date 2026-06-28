@@ -49,6 +49,14 @@ if ($Uninstall) {
         Copy-Item "$uiPath.en.bak" $uiPath -Force
         Info "ui.js restaure (anglais)."
     } else { Warn "Pas de sauvegarde ui.js.en.bak trouvee." }
+    $smtRoot = Join-Path $EasyEdaDir "resources\app\assets\smt-ui"
+    if (Test-Path $smtRoot) {
+        $smtVer = Get-ChildItem $smtRoot -Directory | Sort-Object Name -Descending | Select-Object -First 1
+        if ($smtVer -and (Test-Path "$($smtVer.FullName)\smt-ui.js.en.bak")) {
+            Copy-Item "$($smtVer.FullName)\smt-ui.js.en.bak" "$($smtVer.FullName)\smt-ui.js" -Force
+            Info "smt-ui.js restaure (anglais)."
+        }
+    }
     Write-Host "Redemarre EasyEDA Pro." -ForegroundColor Cyan
     exit 0
 }
@@ -119,6 +127,54 @@ foreach($f in @('fr.json','app-menu-fr.json')){
         if ((Test-Path $dst) -and -not (Test-Path "$dst.bak")) { Copy-Item $dst "$dst.bak" -Force }
         Copy-Item $src $dst -Force
         Info "Locale copiee : $f"
+    }
+}
+
+# --- module SMT / DFM (smt-ui.js) : DESACTIVE dans l'installeur (trop lent en PowerShell) ---
+# Pour traduire le module SMT, utiliser le script node (rapide) :
+#   node smt\apply-french-smt.mjs "C:\Program Files\easyeda-pro\resources\app\assets\smt-ui\<VERSION>\smt-ui.js"
+$smtRoot = Join-Path $EasyEdaDir "resources\app\assets\smt-ui"
+$smtFr   = Join-Path $Here "smt\smt-fr.json"
+if ($false -and (Test-Path $smtRoot) -and (Test-Path $smtFr)) {
+    $smtVer  = Get-ChildItem $smtRoot -Directory | Sort-Object Name -Descending | Select-Object -First 1
+    $smtPath = if ($smtVer) { Join-Path $smtVer.FullName "smt-ui.js" } else { $null }
+    if ($smtPath -and (Test-Path $smtPath)) {
+        $smt = [System.IO.File]::ReadAllText($smtPath, [System.Text.Encoding]::UTF8)
+        if ($smt.Contains('fr:{common:Rnt.fr}')) {
+            Info "Module SMT/DFM deja en francais."
+        } else {
+            $rs = $smt.IndexOf('Rnt={')
+            if ($rs -lt 0) { Warn "Module SMT : table Rnt introuvable, ignore." }
+            else {
+                $i = $rs + 4; $d = 0; $end = -1; $inStr = $false
+                while ($i -lt $smt.Length) {
+                    $c = $smt[$i]
+                    if ($inStr) { if ($c -eq '\') { $i += 2; continue }; if ($c -eq '"') { $inStr = $false }; $i++; continue }
+                    if ($c -eq '"') { $inStr = $true; $i++; continue }
+                    if ($c -eq '{') { $d++ } elseif ($c -eq '}') { $d--; if ($d -eq 0) { $end = $i; break } }
+                    $i++
+                }
+                if ($end -lt 0) { Warn "Module SMT : analyse de Rnt impossible, ignore." }
+                else {
+                    if (-not (Test-Path "$smtPath.en.bak")) { Copy-Item $smtPath "$smtPath.en.bak" -Force }
+                    $sb2 = New-Object System.Text.StringBuilder
+                    [void]$sb2.Append(',fr:{'); $firstK = $true
+                    foreach ($line in [System.IO.File]::ReadAllLines($smtFr)) {
+                        $m = $rx.Match($line)
+                        if (-not $m.Success) { continue }
+                        $k = JsonUnescape $m.Groups[1].Value
+                        $v = Enc (JsonUnescape $m.Groups[2].Value)
+                        if (-not $firstK) { [void]$sb2.Append(',') }
+                        [void]$sb2.Append($k + ':"' + $v + '"'); $firstK = $false
+                    }
+                    [void]$sb2.Append('}')
+                    $smt = $smt.Substring(0, $end) + $sb2.ToString() + $smt.Substring($end)
+                    $smt = $smt.Replace('en:{common:Rnt.en}}', 'en:{common:Rnt.en},fr:{common:Rnt.fr}}')
+                    [System.IO.File]::WriteAllText($smtPath, $smt, (New-Object System.Text.UTF8Encoding($false)))
+                    Info "Module SMT/DFM traduit (smt-ui.js)."
+                }
+            }
+        }
     }
 }
 
