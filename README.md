@@ -28,41 +28,25 @@ script that injects them into your own copy of EasyEDA's `ui.js`.
 | `CODE-MODS.md` | The code edits that make French selectable (`ui.js` #1–2 automated; `ui.js` #3–4 and the `app.js` integration documented) |
 | `MEMO_EASYEDA_FR.md` | Full translation procedure / project notes |
 
-## Requirements
+## Installation — 3 steps
 
-- **Node.js ≥ 18** (only to run the apply script)
-- **EasyEDA Pro** installed (Windows). Admin rights to write into `Program Files`.
+1. **Download & unzip** this project (green **Code** button → *Download ZIP*, then extract).
+2. Open **PowerShell as Administrator** (right-click PowerShell → *Run as administrator*),
+   `cd` into the unzipped folder, and run **one command**:
+   ```powershell
+   Set-ExecutionPolicy Bypass -Scope Process -Force ; .\install.ps1
+   ```
+3. **Restart EasyEDA Pro** → pick **Français** in the language menu (top-right). Done. 🎉
 
-## Installation
+`install.ps1` does everything for you: it **auto-detects** your EasyEDA install (no version
+folder to find), backs up `ui.js`, inserts the **3 870** translations, registers the French
+language + flag, and copies the locale files.
 
-1. **Find your `ui.js`** — the active copy is usually in the EasyEDA **cache** under
-   your Documents; a bundled default also exists in `Program Files` (version folder differs):
-   ```
-   %USERPROFILE%\Documents\LCEDA-Pro\cache.<id>\pro-ui\<VERSION>\js\ui.js   (active)
-   C:\Program Files\easyeda-pro\resources\app\assets\pro-ui\<VERSION>\js\ui.js   (bundled)
-   ```
-2. **Apply the translations** (run an elevated terminal so it can write there):
-   ```bash
-   node apply-french.mjs "C:\Program Files\easyeda-pro\resources\app\assets\pro-ui\<VERSION>\js\ui.js"
-   ```
-   The script:
-   - inserts the **3 870** translations into the French table,
-   - **registers the French language option** and its flag,
-   - writes a backup next to the file: **`ui.js.en.bak`**,
-   - is **idempotent** (safe to re-run) and keeps the file pure-ASCII.
-3. *(Optional — system strings)* copy the locale files and apply the two remaining
-   edits described in **`CODE-MODS.md`**:
-   ```
-   copy locale\fr.json           ...\assets\locale\fr.json
-   copy locale\app-menu-fr.json  ...\assets\locale\app-menu-fr.json
-   ```
-4. **Restart EasyEDA Pro** and pick **Français** in the language menu (top-right).
+- **Back to English:** `.\install.ps1 -Uninstall`
+- **EasyEDA installed elsewhere:** `.\install.ps1 -EasyEdaDir "D:\...\easyeda-pro"`
 
-### Revert to English
-
-```bash
-copy "ui.js.en.bak" "ui.js"     # restore the backup the script made
-```
+> Requirements: Windows + EasyEDA Pro. PowerShell is built into Windows — **nothing else to
+> install**. (Advanced users can instead run `node apply-french.mjs "<path-to-ui.js>"`.)
 
 ## Also included
 
