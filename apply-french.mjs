@@ -1,13 +1,11 @@
 /**
  * EasyEDA Pro - French language pack applier.
  *
- * Locates the French locale object inside a target ui.js (EasyEDA Pro's UI bundle)
- * via the locale map ({...fr:<name>...}) and makes every translatable string French:
- *   - REPLACES the value of keys that already exist (so French wins even when EasyEDA
- *     keeps the FIRST value of a duplicated key), and
- *   - ADDS the keys that are missing (before the @@topMenu marker).
- * It also translates the top menu bar (the @@topMenu nested object, whose keys may be
- * quoted "File{num}" or bare identifiers like Order:) and applies the 4 code mods.
+ * Direct approach: translate the ENGLISH strings to French in place. EasyEDA's English
+ * locale object is COMPLETE, so REPLACING its values with French translates the whole UI
+ * with no missing keys (no need to build a separate French object). We also translate the
+ * French locale object (adding any keys it lacks) and the top menu bar (@@topMenu), and
+ * apply the code mods that make French selectable + load locally.
  *
  * Accents are emitted as \uXXXX so the file stays pure-ASCII. Works across versions
  * (3.2.148, 3.2.149, ...) because it captures the minified names instead of hardcoding.
@@ -58,37 +56,55 @@ function matchBrace(s, from) {
 
 let s = fs.readFileSync(target, 'utf8');
 const nonAsciiBefore = (s.match(/[^\x00-\x7F]/g) || []).length;
-const topBefore = (s.match(/,"@@topMenu"/g) || []).length;
 
-// --- Locate the French locale object: locale map {...fr:<name>...} then `var <name>={` -
-const mapM = s.match(/[,{]fr:(\w+)[,}]/);
-const frVar = mapM ? mapM[1] : 'sni';
-let decl = 'var ' + frVar + '={';
-let dsObj = s.indexOf(decl);
-if (dsObj < 0) { decl = frVar + '={'; dsObj = s.indexOf(decl); } // fallback
-if (dsObj < 0) { console.error('ERROR: French locale object `' + frVar + '` not found.'); process.exit(2); }
-const regStart = dsObj + decl.length - 1; // at '{'
-const regEnd = matchBrace(s, regStart);
-let region = s.slice(regStart, regEnd + 1);
-
-// --- Depth-1 strings: REPLACE existing values, collect the missing ones ---------------
-let replaced = 0;
-const missing = [];
-for (const [key, val] of Object.entries(glossary)) {
-  const ek = enc(key), ev = enc(val);
-  const re = new RegExp('"' + esc(ek) + '":"(?:[^"\\\\]|\\\\.)*"');
-  if (re.test(region)) { region = region.replace(re, '"' + ek + '":"' + ev + '"'); replaced++; }
-  else missing.push(',"' + ek + '":"' + ev + '"');
+// Find a locale object's minified var name from the map ({...en:rni,...,fr:sni,...}).
+function localeVar(code) { const m = s.match(new RegExp('[,{]' + code + ':(\\w+)[,}]')); return m ? m[1] : null; }
+// Find `var <name>={ ... }` (or `<name>={...}`) boundaries in `text`.
+function findObj(text, name) {
+  let decl = 'var ' + name + '={';
+  let i = text.indexOf(decl);
+  if (i < 0) { decl = name + '={'; i = text.indexOf(decl); }
+  if (i < 0) return null;
+  const start = i + decl.length - 1;
+  const end = matchBrace(text, start);
+  return end < 0 ? null : { start, end };
 }
-// ADD the missing ones right before the first @@topMenu inside the locale object
-const tmAdd = region.indexOf(',"@@topMenu"') >= 0 ? region.indexOf(',"@@topMenu"') : region.indexOf('"@@topMenu"');
-if (tmAdd >= 0 && missing.length) region = region.slice(0, tmAdd) + missing.join('') + region.slice(tmAdd);
+// REPLACE every "englishKey":"value" in a locale object with the French value.
+// addMissing: also append keys the object lacks (used for the partial fr object).
+function translateLocale(text, name, addMissing, dict) {
+  const loc = findObj(text, name);
+  if (!loc) return { text, replaced: 0, added: 0, found: false };
+  let region = text.slice(loc.start, loc.end + 1);
+  let replaced = 0; const missing = [];
+  for (const [key, val] of Object.entries(dict)) {
+    const ek = enc(key), ev = enc(val);
+    const re = new RegExp('"' + esc(ek) + '":"(?:[^"\\\\]|\\\\.)*"');
+    if (re.test(region)) { region = region.replace(re, '"' + ek + '":"' + ev + '"'); replaced++; }
+    else if (addMissing) missing.push(',"' + ek + '":"' + ev + '"');
+  }
+  if (addMissing && missing.length) region = region.slice(0, -1) + missing.join('') + '}';
+  return { text: text.slice(0, loc.start) + region + text.slice(loc.end + 1), replaced, added: missing.length, found: true };
+}
 
-let out = s.slice(0, regStart) + region + s.slice(regEnd + 1);
+const enVar = localeVar('en');
+const frVar = localeVar('fr') || 'sni';
 
-// --- Translate the top menu bar (@@topMenu) ------------------------------------------
-// On some versions @@topMenu lives OUTSIDE the fr locale object, as a single shared menu
-// config. REPLACE its values (keys may be quoted "File{num}" or bare like Order:).
+// Translatable keys = the UI strings + the menu words (Settings/Advanced/Tools/...). The
+// menu BAR items are looked up by their plain key (t("Settings")), so they must live in
+// the locale object too - not only inside @@topMenu.
+const allDict = { ...glossary, ...menuGlossary };
+
+let out = s;
+// 1) Translate the ENGLISH object in place (harmless if it is partial).
+const enRes = enVar ? translateLocale(out, enVar, false, allDict) : { replaced: 0, added: 0, found: false };
+if (enRes.found) out = enRes.text;
+// 2) Translate the FRENCH object: replace existing values + add every key it lacks, so
+//    t(anyEnglishKey) returns French (no fallback-to-English gaps).
+const frRes = translateLocale(out, frVar, true, allDict);
+if (frRes.found) out = frRes.text;
+
+// 3) Translate the top menu bar (@@topMenu) - a single shared menu config.
+//    Keys may be quoted "File{num}" or bare identifiers like Order:.
 let menuReplaced = 0;
 {
   const mk = '"@@topMenu":';
@@ -112,7 +128,7 @@ let menuReplaced = 0;
 // --- Code modifications that make French work in the UI -------------------------------
 const mods = [];
 
-// 1) Register the French language option in the language switcher.
+// a) Register the French language option in the language switcher.
 if (out.includes('icon:"language_fr",lang:"fr"')) mods.push('lang-option: already present');
 else {
   const anchor = ',icon:"language_en",lang:"en"}]';
@@ -120,7 +136,7 @@ else {
   else mods.push('lang-option: WARN anchor not found');
 }
 
-// 2) Flag sprite CSS for the French entry.
+// b) Flag sprite CSS for the French entry.
 if (/\.language_fr_\w+\{background-position/.test(out)) mods.push('flag-css: already present');
 else {
   const m = out.match(/#language \.language_en_(\w+)\{background-position:-36px -26px\}/);
@@ -128,8 +144,7 @@ else {
   else mods.push('flag-css: WARN anchor not found');
 }
 
-// 3) THE KEY FIX: force LOCAL locale loading (else EasyEDA fetches the partial French
-//    from its server and ignores our local table). Regex-captures the minified names.
+// c) Force LOCAL locale loading (else EasyEDA fetches the partial French from its server).
 const cacheRe = /(\w+)\._cache\[(\w+)\]&&\1\.update\(\2\)/;
 if (cacheRe.test(out)) {
   out = out.replace(cacheRe, (mm, X, Y) =>
@@ -137,7 +152,7 @@ if (cacheRe.test(out)) {
   mods.push('local-loading: ADDED');
 } else mods.push('local-loading: already present / anchor not found');
 
-// 4) Show "FR" in the top-right language badge (cosmetic).
+// d) Show "FR" in the top-right language badge (cosmetic).
 if (out.includes('children:"FR"}')) mods.push('fr-badge: already present');
 else {
   const bq = String.fromCharCode(96);
@@ -150,11 +165,11 @@ else {
 
 // --- verify & write -------------------------------------------------------------------
 const nonAsciiAfter = (out.match(/[^\x00-\x7F]/g) || []).length;
-const topAfter = (out.match(/,"@@topMenu"/g) || []).length;
 if (!process.argv.includes('--dry-run')) { fs.copyFileSync(target, target + '.en.bak'); fs.writeFileSync(target, out, 'utf8'); }
 
-console.log('fr object:', frVar, '| depth-1 replaced:', replaced, '| added:', missing.length, '| top-menu replaced:', menuReplaced);
+console.log('en object:', enVar, '-> replaced:', enRes.replaced, (enRes.found ? '' : '(NOT FOUND)'));
+console.log('fr object:', frVar, '-> replaced:', frRes.replaced, '| added:', frRes.added, (frRes.found ? '' : '(NOT FOUND)'));
+console.log('top-menu replaced:', menuReplaced);
 mods.forEach((m) => console.log('  code-mod', m));
-console.log('@@topMenu:', topBefore, '->', topAfter, topAfter === topBefore ? 'OK' : 'CHANGED!');
-console.log('non-ASCII:', nonAsciiBefore, '->', nonAsciiAfter, nonAsciiAfter === nonAsciiBefore ? 'OK (pure ASCII added)' : 'CHANGED!');
+console.log('non-ASCII:', nonAsciiBefore, '->', nonAsciiAfter, nonAsciiAfter === nonAsciiBefore ? 'OK (pure ASCII added)' : 'CHANGED');
 console.log(process.argv.includes('--dry-run') ? '(dry-run, nothing written)' : 'written. backup: ' + path.basename(target) + '.en.bak');
