@@ -610,7 +610,7 @@
   "Create a new Schematic Lib": "Créer une nouvelle librairie Schéma",
   "Create a new Spice Symbol": "Créer un nouveau Symbole",
   "Create a new Spice Subckt": "Créer un nouveau Sous-Symbole",
-  "Create a new PCB": "Créer un nouveau Circuit",
+  "Create a new PCB": "Créer un nouveau PCB",
   "Create a new PCB Lib": "Créer une nouvelle librairie d'Empreintes",
   "Export your file, then print it yourself.": "Exporter le fichier puis imprimez-le.",
   "Trace width is too small": "Piste trop étroite",
@@ -3882,5 +3882,8 @@
   "1.If your colorful silkscreen boards need JLCPCB SMT service, please make sure you have set the Technology Side at \"Panelize\" feature(Type: V-Cut, Create Technology Side: Yes, the panelized size length or width must large than 70mm) or add Technology Side by manually, otherwise, the colorful silkscreen will not be printed if you choose the SMT service.": "1.Si vos cartes à sérigraphie couleur nécessitent le service SMT JLCPCB, veuillez vous assurer d’avoir défini le « Côté Technologique » dans la fonction « Panélisation » (Type : V-Cut, Créer le Côté Technologique : Oui, la longueur ou largeur panélisée doit être supérieure à 70 mm) ou d’ajouter le Côté Technologique manuellement ; sinon, la sérigraphie couleur ne sera pas imprimée si vous choisissez le service SMT.",
   "Please make sure the object with net is inside the board outline!": "Veuillez vous assurer que l’objet relié à un net est à l’intérieur du contour de la carte !",
   "1. Please make sure the component designators of the schematic and PCB are corresponding": "1. Veuillez vous assurer que les références des composants du schéma et du PCB correspondent",
-  "Please make sure the editor is connect with internet, the extraction need some time, please wait a while": "Veuillez vous assurer que l’éditeur est connecté à Internet ; l’extraction prend un certain temps, veuillez patienter."
+  "Please make sure the editor is connect with internet, the extraction need some time, please wait a while": "Veuillez vous assurer que l’éditeur est connecté à Internet ; l’extraction prend un certain temps, veuillez patienter.",
+  "The schematic diagram and PCB need to be under the same board to use this feature.": "Le schéma et le PCB doivent être sous la même carte pour utiliser cette fonctionnalité.",
+  "Select the PCB that need to be placed on the same board": "Sélectionnez le PCB à placer sur la même carte",
+  "Create a new PCB and place it on the same board": "Créer un nouveau PCB et le placer sur la même carte"
 }
