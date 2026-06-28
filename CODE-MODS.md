@@ -53,6 +53,30 @@ This pairs with copying `locale/fr.json` and `locale/app-menu-fr.json` into
 
 ---
 
+---
+
+## `app.js` integration (advanced)  ✍️ manual
+
+The Electron **shell** (`app.js`, in `…\resources\app\app.js`) holds its own small string
+table. To translate it (data in `app-fr.json`, 132 pairs):
+
+1. **Register the FR language code** in the language enum:
+   ```js
+   // ...r.LANGUAGE_EN="en",r))   ->   ...r.LANGUAGE_EN="en",r.LANGUAGE_FR="fr",r))
+   ```
+2. **Add a French entry** to the per-language module map (`...,fr:<module>`).
+3. **Insert the French string table** and route the lookup through it. The original
+   lookup looks like:
+   ```js
+   function Ly(t="",e={}){let a=(<...>.language=="en"?K5:q5)[t]||t; ... }
+   ```
+   Add `var f5={ ...pairs from app-fr.json... };` in scope and make the lookup pick `f5`
+   when the language is `"fr"`. (`Ly`, `K5`, `q5`, `f5` are minified names — they differ
+   per build; confirm the exact identifiers in your `app.js`.)
+
+Because these identifiers are version-specific, this step is intentionally **not**
+automated; `app-fr.json` ships the data so it can be re-applied to any build.
+
 ### Not translatable from `ui.js`
 
 Some strings come from the server-loaded PCB-order panel ("Double Sided",

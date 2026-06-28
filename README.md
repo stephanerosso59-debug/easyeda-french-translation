@@ -19,11 +19,13 @@ script that injects them into your own copy of EasyEDA's `ui.js`.
 
 | File | Description |
 |---|---|
-| `ui-fr.json` | The translation glossary — **3 870** `English → Français` pairs |
-| `apply-french.mjs` | Node script: inserts the translations **+** registers the French language entry and flag in your `ui.js` |
+| `ui-fr.json` | Main UI glossary — **3 870** `English → Français` pairs (from `ui.js`) |
+| `app-fr.json` | Startup / workspace-picker / cache & storage settings — **132** pairs (from the `app.js` shell) |
+| `apply-french.mjs` | Node script: inserts the `ui.js` translations **+** registers the French language entry and flag |
 | `locale/fr.json` | System locale (Client Setting panel & misc. strings), ~474 keys |
 | `locale/app-menu-fr.json` | Application menu (French) |
-| `CODE-MODS.md` | The 4 small code edits that make French selectable (2 are automated, 2 documented) |
+| `translate_bom.ps1` | Bonus: translates an exported **Interactive BOM** HTML to French (~80 terms) |
+| `CODE-MODS.md` | The code edits that make French selectable (`ui.js` #1–2 automated; `ui.js` #3–4 and the `app.js` integration documented) |
 | `MEMO_EASYEDA_FR.md` | Full translation procedure / project notes |
 
 ## Requirements
@@ -33,9 +35,11 @@ script that injects them into your own copy of EasyEDA's `ui.js`.
 
 ## Installation
 
-1. **Find your `ui.js`** (the version folder name will differ):
+1. **Find your `ui.js`** — the active copy is usually in the EasyEDA **cache** under
+   your Documents; a bundled default also exists in `Program Files` (version folder differs):
    ```
-   C:\Program Files\easyeda-pro\resources\app\assets\pro-ui\<VERSION>\js\ui.js
+   %USERPROFILE%\Documents\LCEDA-Pro\cache.<id>\pro-ui\<VERSION>\js\ui.js   (active)
+   C:\Program Files\easyeda-pro\resources\app\assets\pro-ui\<VERSION>\js\ui.js   (bundled)
    ```
 2. **Apply the translations** (run an elevated terminal so it can write there):
    ```bash
@@ -59,6 +63,23 @@ script that injects them into your own copy of EasyEDA's `ui.js`.
 ```bash
 copy "ui.js.en.bak" "ui.js"     # restore the backup the script made
 ```
+
+## Also included
+
+- **`app.js` strings** (`app-fr.json`, 132 pairs) — the Electron shell shown at launch
+  (workspace picker, online/offline mode, cache & storage settings). Applying these is a
+  more invasive edit to `app.js` (a `f5` French table + routing the lookup through it);
+  it is **documented in `CODE-MODS.md`** rather than auto-applied, because it depends on
+  minified identifiers that change between versions.
+- **Interactive BOM → French** (`translate_bom.ps1`) — when EasyEDA exports an Interactive
+  BOM as HTML, run:
+  ```powershell
+  .\translate_bom.ps1 -InputFile "InteractiveBOM_PCB1_2026-06-16.html"
+  ```
+  It writes `..._FR.html` next to it.
+
+> **Not yet covered:** the SMT/assembly module (`smt-ui.js`, i18next-based) and the
+> `pro-mgr` workers (mostly locale-routing code). Contributions welcome.
 
 ## How it works (clean-room / legal)
 
