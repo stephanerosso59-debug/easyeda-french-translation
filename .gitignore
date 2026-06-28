@@ -3,3 +3,10 @@ node_modules/
 *.en.bak
 *.bak
 .DS_Store
+
+# EasyEDA proprietary modules (NEVER publish - only extracted translation data)
+*.zip
+smt-ui/
+smt-ui.js
+app.js
+ui.js
