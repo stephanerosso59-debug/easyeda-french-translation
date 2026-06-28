@@ -106,7 +106,7 @@ Info "Traductions inserees : $added  (deja presentes : $skipped)"
 # --- code-mods : rendre le francais selectionnable ---
 if ($ui -notmatch 'icon:"language_fr",lang:"fr"') {
     $anchor = ',icon:"language_en",lang:"en"}]'
-    if ($ui.Contains($anchor)) { $ui = $ui.Replace($anchor, ',icon:"language_en",lang:"en"},{title:"Français",icon:"language_fr",lang:"fr"}]'); Info "Langue FR enregistree." }
+    if ($ui.Contains($anchor)) { $ui = $ui.Replace($anchor, ',icon:"language_en",lang:"en"},{title:"Fran\u00e7ais",icon:"language_fr",lang:"fr"}]'); Info "Langue FR enregistree." }
     else { Warn "Ancre 'langue' non trouvee (voir CODE-MODS.md)." }
 }
 $mCss = [regex]::Match($ui,'#language \.language_en_(\w+)\{background-position:-36px -26px\}')
