@@ -75,8 +75,14 @@ else err('ui.js introuvable (pro-ui)');
 // 2) app.js (ecran de demarrage, espace de travail, cache, parametres)
 if (fs.existsSync(appJs)) { console.log('\n  app.js (demarrage / parametres)...'); runApplier(path.join('app', 'apply-french-app.mjs'), appJs); }
 
-// 3) smt-ui.js (module SMT / DFM)
-if (smtJs && fs.existsSync(smtJs)) { console.log('\n  smt-ui.js (module SMT)...'); runApplier(path.join('smt', 'apply-french-smt.mjs'), smtJs); }
+// 3) smt-ui.js (module SMT / DFM + Interactive BOM)
+if (smtJs && fs.existsSync(smtJs)) {
+  console.log('\n  smt-ui.js (module SMT + iBOM)...');
+  const smtBak = smtJs + '.en.bak';
+  if (!fs.existsSync(smtBak)) { fs.copyFileSync(smtJs, smtBak); ok('sauvegarde : ' + path.basename(smtBak)); }
+  runApplier(path.join('smt', 'apply-french-smt.mjs'), smtJs);       // i18next (Rnt.fr) : panneaux SMT/DFM
+  runApplier(path.join('smt', 'apply-french-smt-ibom.mjs'), smtJs);  // libelles inline de l'Interactive BOM
+}
 
 // 4) locales systeme
 console.log('\n  locales (fr.json, app-menu-fr.json)...');
