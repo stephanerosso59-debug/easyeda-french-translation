@@ -1,7 +1,7 @@
 # EasyEDA Pro — French Translation Pack 🇫🇷
 
 A community **French (français) language pack** for the **EasyEDA Pro** desktop
-application. It ships the **translation data** (≈ 4 200 UI strings) plus a small
+application. It ships the **translation data** (≈ 8 750 UI strings) plus a small
 script that injects them into your own copy of EasyEDA's `ui.js`.
 
 > ⚠️ **Not affiliated with EasyEDA / JLCEDA.** This repository contains **only**
@@ -19,7 +19,7 @@ script that injects them into your own copy of EasyEDA's `ui.js`.
 
 | File | Description |
 |---|---|
-| `ui-fr.json` | Main UI glossary — **4 199** `English → Français` pairs (from `ui.js`) |
+| `ui-fr.json` | Main UI glossary — **8 755** `English → Français` pairs (from `ui.js`) |
 | `app-fr.json` | Startup / workspace-picker / cache & storage settings — **132** pairs (from the `app.js` shell) |
 | `apply-french.mjs` | Node script: inserts the `ui.js` translations **+** registers the French language entry and flag |
 | `locale/fr.json` | System locale (Client Setting panel & misc. strings), ~474 keys |
@@ -50,7 +50,7 @@ script that injects them into your own copy of EasyEDA's `ui.js`.
    *)*
 5. **Ferme et rouvre EasyEDA Pro**, puis choisis **Français** dans le menu de langue (en haut à droite). 🎉
 
-`install.mjs` traduit **tout** : `ui.js` (éditeur, **4 199** chaînes), `app.js` (écran de démarrage /
+`install.mjs` traduit **tout** : `ui.js` (éditeur, **8 755** chaînes), `app.js` (écran de démarrage /
 espace de travail / paramètres), `smt-ui.js` (module SMT/DFM), enregistre la **langue + le drapeau**
 FR et copie les locales. Une sauvegarde `*.en.bak` est créée pour chaque fichier modifié.
 
