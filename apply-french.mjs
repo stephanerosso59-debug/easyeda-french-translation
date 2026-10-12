@@ -165,7 +165,7 @@ else {
 
 // --- verify & write -------------------------------------------------------------------
 const nonAsciiAfter = (out.match(/[^\x00-\x7F]/g) || []).length;
-if (!process.argv.includes('--dry-run')) { fs.copyFileSync(target, target + '.en.bak'); fs.writeFileSync(target, out, 'utf8'); }
+if (!process.argv.includes('--dry-run')) { if (!fs.existsSync(target + '.en.bak')) fs.copyFileSync(target, target + '.en.bak'); /* never overwrite: a re-run must keep the ENGLISH original */ fs.writeFileSync(target, out, 'utf8'); }
 
 console.log('en object:', enVar, '-> replaced:', enRes.replaced, (enRes.found ? '' : '(NOT FOUND)'));
 console.log('fr object:', frVar, '-> replaced:', frRes.replaced, '| added:', frRes.added, (frRes.found ? '' : '(NOT FOUND)'));

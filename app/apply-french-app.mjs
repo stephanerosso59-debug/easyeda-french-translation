@@ -27,28 +27,37 @@ function enc(str) {
   return r;
 }
 
-let s = fs.readFileSync(target, 'utf8').replace(/^﻿/, '');
-if (s.includes('var f5=') || s.includes('LANGUAGE_FR="fr"')) {
+let s = fs.readFileSync(target, 'utf8').replace(/^\uFEFF/, '');
+if (s.includes('LANGUAGE_FR="fr"')) {
   console.log('app.js French pack already applied (idempotent skip).');
   process.exit(0);
 }
 
-const lyOld = 'function Ly(t="",e={}){let a=(X.globalWindowsMap[X.globalActiveWindowId].language=="en"?K5:q5)[t]||t';
-if (!s.includes(lyOld)) {
+// minified names change with every EasyEDA build -> capture them by regex
+// e.g. 3.2.149: Ly / K5 / q5 / W3   -   3.2.206: Py / u6 / l6 / iT
+const lyRe = /function ([\w$]+)\(t="",e=\{\}\)\{let a=\(([\w$]+)\.globalWindowsMap\[\2\.globalActiveWindowId\]\.language=="en"\?([\w$]+):([\w$]+)\)\[t\]\|\|t/;
+const ly = lyRe.exec(s);
+const mapRe = /"zh-cn":([\w$]+),en:([\w$]+)\}/;
+const map = mapRe.exec(s);
+const langRe = /r\.LANGUAGE_EN="en",r\)\)/;
+if (!ly || !map || !langRe.test(s)) {
   console.error('ERROR: app.js structure not recognized (different EasyEDA version?) - not translated.');
   process.exit(2);
 }
+const [lyOld, fn, W, EN, ZH] = ly;
 
-// build the f5 French table
-const f5 = 'var f5={' + Object.entries(glossary).map(([k, v]) => '"' + enc(k) + '":"' + enc(v) + '"').join(',') + '};';
+// French table under a name that cannot collide with EasyEDA's minified identifiers
+const FR = '__easyedaFr';
+const frTable = 'var ' + FR + '={' + Object.entries(glossary).map(([k, v]) => '"' + enc(k) + '":"' + enc(v) + '"').join(',') + '};';
 
 // 1) register the FR language constant
-s = s.replace('r.LANGUAGE_EN="en",r))', 'r.LANGUAGE_EN="en",r.LANGUAGE_FR="fr",r))');
-// 2) add fr to the language->module map
-s = s.replace('"zh-cn":X3,en:W3}', '"zh-cn":X3,en:W3,fr:W3}');
-// 3) insert the f5 table + route the Ly lookup through it for fr
-const lyNew = f5 + 'function Ly(t="",e={}){let a=(()=>{let _l=X.globalWindowsMap[X.globalActiveWindowId].language;return _l=="en"||_l=="en-us"?K5:_l=="fr"||_l=="fr-fr"?f5:q5})()[t]||t';
+s = s.replace(langRe, 'r.LANGUAGE_EN="en",r.LANGUAGE_FR="fr",r))');
+// 2) add fr to the language->module map (same module as en)
+s = s.replace(map[0], '"zh-cn":' + map[1] + ',en:' + map[2] + ',fr:' + map[2] + '}');
+// 3) insert the French table + route the lookup through it for fr
+const lyNew = frTable + 'function ' + fn + '(t="",e={}){let a=(()=>{let _l=' + W + '.globalWindowsMap[' + W + '.globalActiveWindowId].language;return _l=="en"||_l=="en-us"?' + EN + ':_l=="fr"||_l=="fr-fr"?' + FR + ':' + ZH + '})()[t]||t';
 s = s.replace(lyOld, lyNew);
 
+if (!fs.existsSync(target + '.en.bak')) fs.copyFileSync(target, target + '.en.bak'); // English original, used by --uninstall
 fs.writeFileSync(target, s, 'utf8'); // UTF-8, no BOM
-console.log('app.js translated: f5 (' + Object.keys(glossary).length + ' strings) + LANGUAGE_FR + fr map + Ly routing. OK.');
+console.log('app.js translated: ' + FR + ' (' + Object.keys(glossary).length + ' strings) + LANGUAGE_FR + fr map + ' + fn + '() routing. OK.');
